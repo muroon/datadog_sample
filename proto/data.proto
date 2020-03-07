@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package proto;
+
+service DataManager{
+    rpc GetMessages (EmptyParams) returns (Messages) {}
+    rpc PostMessage (stream Message) returns (stream Message) {}
+}
+
+message EmptyParams {}
+
+message Message {
+    uint32 id = 1;
+    string text = 2;
+}
+
+message Messages {
+    repeated Message list = 1;
+}
