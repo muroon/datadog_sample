@@ -1,7 +1,7 @@
 package service
 
 import (
-	"grpc_datadog/server/model"
+	"grpc_datadog/grpcserver/model"
 )
 
 func GetMessages() ([]*model.Message, error) {

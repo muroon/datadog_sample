@@ -20,6 +20,7 @@ func main() {
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
+		return
 	}
 	defer conn.Close()
 	c := pb.NewDataManagerClient(conn)
@@ -31,8 +32,6 @@ func main() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-
-
 
 	// stream
 	stream, err := c.PostMessage(ctx)

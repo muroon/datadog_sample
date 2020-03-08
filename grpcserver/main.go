@@ -1,7 +1,7 @@
 package main
 
 import (
-	"grpc_datadog/server/service"
+	"grpc_datadog/grpcserver/service"
 	"log"
 	"net"
 	"io"
@@ -57,12 +57,14 @@ func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
+		return
 	}
 
 	err = service.OpenDB()
 	defer service.CloseDB()
 	if err != nil {
 		log.Fatalf("open DB error :%v", err)
+		return
 	}
 
 	s := grpc.NewServer()
@@ -72,6 +74,7 @@ func main() {
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
+		return
 	}
 }
 
