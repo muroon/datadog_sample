@@ -1,14 +1,14 @@
 package main
 
 import (
-	"grpc_datadog/grpcserver/service"
+	"datadog_sample/grpcserver/service"
 	"log"
 	"net"
 	"io"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pb "grpc_datadog/proto"
+	pb "datadog_sample/proto"
 	"google.golang.org/grpc/reflection"
 )
 

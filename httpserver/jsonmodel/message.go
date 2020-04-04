@@ -8,3 +8,11 @@ type Message struct {
 type PostMessageResult struct {
 	Status bool `json:status`
 }
+
+type CustomResult struct {
+	Status bool `json:status`
+}
+
+type ErrorResult struct {
+	Message string `json:message`
+}
