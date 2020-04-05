@@ -4,10 +4,18 @@ import (
 	"datadog_sample/httpserver/usecases"
 	"log"
 	"net/http"
+
+	httptrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-
 func main() {
+	// Datadog
+	tracer.Start(
+		tracer.WithEnv("sample"),
+	)
+	defer tracer.Stop()
+
 	err := usecases.Init()
 	defer usecases.End()
 	if err != nil {
@@ -16,14 +24,16 @@ func main() {
 	}
 
 	// http handle
-	http.HandleFunc("/grpc/", usecases.GrpcList)
-	http.HandleFunc("/grpc/post", usecases.GrpcPost)
-	http.HandleFunc("/custom/", usecases.Custom)
-	http.HandleFunc("/db/", usecases.DBList)
-	http.HandleFunc("/db/post", usecases.DBPost)
-	err = http.ListenAndServe(":8080", nil)
+	mux := httptrace.NewServeMux(
+		httptrace.WithServiceName("web-service"),
+	) // http handler for Datadog
+	mux.HandleFunc("/grpc/", usecases.GrpcList)
+	mux.HandleFunc("/grpc/post", usecases.GrpcPost)
+	mux.HandleFunc("/custom/", usecases.Custom)
+	mux.HandleFunc("/db/", usecases.DBList)
+	mux.HandleFunc("/db/post", usecases.DBPost)
+	err = http.ListenAndServe(":8080", mux)
 	if err != nil {
 		log.Fatalf("http listenServe error: %v", err)
 	}
 }
-

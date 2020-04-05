@@ -11,6 +11,8 @@ import (
 	"datadog_sample/httpserver/jsonmodel"
 
 	pb "datadog_sample/proto"
+
+	grpctrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/google.golang.org/grpc"
 )
 
 const (
@@ -22,9 +24,17 @@ var stream pb.DataManager_PostMessageClient
 var conn *grpc.ClientConn
 
 func openGrpc() error {
+	ui := grpctrace.UnaryClientInterceptor(
+		grpctrace.WithServiceName("grpc-client-service"),
+	)
+
 	// grpc connection
 	var err error
-	conn, err = grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err = grpc.Dial(address,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithUnaryInterceptor(ui),
+	)
 	if err != nil {
 		return err
 	}

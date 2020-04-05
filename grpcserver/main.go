@@ -2,29 +2,34 @@ package main
 
 import (
 	"datadog_sample/grpcserver/service"
+	"io"
 	"log"
 	"net"
-	"io"
+
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+
+	pb "datadog_sample/proto"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pb "datadog_sample/proto"
 	"google.golang.org/grpc/reflection"
+
+	grpctrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/google.golang.org/grpc"
 )
 
 const (
-	port = ":50051"
+	port           = ":50051"
+	datadogService = "grpc-server-service"
 )
 
 type server struct{}
-
 
 func (s *server) GetMessages(ctx context.Context, params *pb.EmptyParams) (*pb.Messages, error) {
 	ms, err := service.GetMessages()
 	list := make([]*pb.Message, 0, len(ms))
 	for _, m := range ms {
 		mes := &pb.Message{
-			Id: m.Id,
+			Id:   m.Id,
 			Text: m.Text,
 		}
 		list = append(list, mes)
@@ -54,6 +59,15 @@ func (s *server) PostMessage(stream pb.DataManager_PostMessageServer) error {
 }
 
 func main() {
+	// Datadog
+	tracer.Start(
+		tracer.WithEnv("sample"),
+	)
+	defer tracer.Stop()
+
+	si := grpctrace.StreamServerInterceptor(grpctrace.WithServiceName(datadogService))
+	ui := grpctrace.UnaryServerInterceptor(grpctrace.WithServiceName(datadogService))
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -67,7 +81,7 @@ func main() {
 		return
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(grpc.StreamInterceptor(si), grpc.UnaryInterceptor(ui))
 	pb.RegisterDataManagerServer(s, &server{})
 
 	// Register reflection service on gRPC server.
@@ -77,4 +91,3 @@ func main() {
 		return
 	}
 }
-

@@ -7,6 +7,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
+
+	"github.com/go-sql-driver/mysql"
+
+	sqltrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/database/sql"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -17,9 +24,17 @@ type message struct {
 	Text string
 }
 
+func initDB() {
+	// Datadog
+	sqltrace.Register("mysql",
+		&mysql.MySQLDriver{},
+		sqltrace.WithServiceName("db-service"),
+	)
+}
+
 func openDB() error {
 	var err error
-	db, err = sql.Open("mysql", "root:@/grpc_datadog")
+	db, err = sqltrace.Open("mysql", "root:@/grpc_datadog")
 	return err
 }
 
@@ -80,7 +95,18 @@ func DBPost(w http.ResponseWriter, r *http.Request) {
 
 func getMessages(ctx context.Context) ([]*message, error) {
 	list := make([]*message, 0)
-	rows, err := db.QueryContext(ctx, "SELECT * FROM message")
+	var err error
+
+	span, ctx := tracer.StartSpanFromContext(ctx,
+		"db",
+		tracer.SpanType(ext.SpanTypeSQL),
+		tracer.ServiceName("db-service"),
+		tracer.ResourceName("get-messages"),
+	)
+	defer span.Finish(tracer.WithError(err))
+
+	var rows *sql.Rows
+	rows, err = db.QueryContext(ctx, "SELECT * FROM message")
 	defer rows.Close()
 	if err != nil {
 		return list, err
@@ -99,6 +125,16 @@ func getMessages(ctx context.Context) ([]*message, error) {
 
 func postMessage(ctx context.Context, text string) (*message, error) {
 	m := new(message)
+
+	var err error
+
+	span, ctx := tracer.StartSpanFromContext(ctx,
+		"db",
+		tracer.SpanType(ext.SpanTypeSQL),
+		tracer.ServiceName("db-service"),
+		tracer.ResourceName("post-message"),
+	)
+	defer span.Finish(tracer.WithError(err))
 
 	stmt, err := db.Prepare("INSERT INTO message(text) VALUES(?)")
 	defer stmt.Close()

@@ -8,6 +8,7 @@ import (
 )
 
 func Init() error {
+	initDB()
 	err := openDB()
 	if err != nil {
 		return err
