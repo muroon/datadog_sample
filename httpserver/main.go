@@ -1,7 +1,7 @@
 package main
 
 import (
-	"datadog_sample/httpserver/usecases"
+	"github.com/muroon/datadog_sample/httpserver/usecases"
 	"log"
 	"net/http"
 

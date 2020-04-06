@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
-	"datadog_sample/httpserver/jsonmodel"
+	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 )
 
 func Custom(w http.ResponseWriter, r *http.Request) {

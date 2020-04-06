@@ -1,4 +1,4 @@
-module datadog_sample
+module github.com/muroon/datadog_sample
 
 go 1.12
 

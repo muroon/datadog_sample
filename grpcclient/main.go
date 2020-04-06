@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
-	pb "datadog_sample/proto"
+	pb "github.com/muroon/datadog_sample/proto"
 )
 
 const (

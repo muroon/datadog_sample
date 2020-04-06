@@ -8,9 +8,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"datadog_sample/httpserver/jsonmodel"
+	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 
-	pb "datadog_sample/proto"
+	pb "github.com/muroon/datadog_sample/proto"
 
 	grpctrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/google.golang.org/grpc"
 )

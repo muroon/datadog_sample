@@ -1,14 +1,14 @@
 package main
 
 import (
-	"datadog_sample/grpcserver/service"
+	"github.com/muroon/datadog_sample/grpcserver/service"
 	"io"
 	"log"
 	"net"
 
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
-	pb "datadog_sample/proto"
+	pb "github.com/muroon/datadog_sample/proto"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

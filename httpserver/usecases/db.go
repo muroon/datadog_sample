@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 	"database/sql"
-	"datadog_sample/httpserver/jsonmodel"
+	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 	"encoding/json"
 	"net/http"
 
