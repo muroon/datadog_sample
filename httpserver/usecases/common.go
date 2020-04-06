@@ -4,12 +4,26 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/muroon/datadog_sample/config"
+
 	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 )
 
+var conf config.Config
+
 func Init() error {
-	initDB()
-	err := openDB()
+	var err error
+	conf, err = config.GetConfig()
+	if err != nil {
+		return err
+	}
+
+	err = initDB()
+	if err != nil {
+		return err
+	}
+
+	err = openDB()
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,13 @@
 package main
 
 import (
-	"github.com/muroon/datadog_sample/grpcserver/service"
+	"fmt"
 	"io"
 	"log"
 	"net"
+
+	"github.com/muroon/datadog_sample/config"
+	"github.com/muroon/datadog_sample/grpcserver/service"
 
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 
@@ -18,14 +21,13 @@ import (
 )
 
 const (
-	port           = ":50051"
 	datadogService = "grpc-server-service"
 )
 
 type server struct{}
 
 func (s *server) GetMessages(ctx context.Context, params *pb.EmptyParams) (*pb.Messages, error) {
-	ms, err := service.GetMessages()
+	ms, err := service.GetMessages(ctx)
 	list := make([]*pb.Message, 0, len(ms))
 	for _, m := range ms {
 		mes := &pb.Message{
@@ -58,7 +60,39 @@ func (s *server) PostMessage(stream pb.DataManager_PostMessageServer) error {
 	return nil // RPC終了
 }
 
+func getDBTypeAndDataSource(
+	conf config.Config,
+) (dbType string, dbSource string, err error) {
+	dbType, err = conf.GrpcDBType()
+	if err != nil {
+		return
+	}
+
+	dbSource, err = conf.GrpcDBDataSource()
+	return
+}
+
 func main() {
+	// config
+	conf, err := config.GetConfig()
+	if err != nil {
+		log.Fatalf("config load failed: %v", err)
+		return
+	}
+
+	// db config
+	dbType, dbSource, err := getDBTypeAndDataSource(conf)
+	if err != nil {
+		log.Fatalf("invalid config: %v", err)
+		return
+	}
+
+	_, grpcPort, err := conf.GrpcHostAndPort()
+	if err != nil {
+		log.Fatalf("invalid config: %v", err)
+		return
+	}
+
 	// Datadog
 	tracer.Start(
 		tracer.WithEnv("sample"),
@@ -68,13 +102,14 @@ func main() {
 	si := grpctrace.StreamServerInterceptor(grpctrace.WithServiceName(datadogService))
 	ui := grpctrace.UnaryServerInterceptor(grpctrace.WithServiceName(datadogService))
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 		return
 	}
 
-	err = service.OpenDB()
+	service.InitDB(dbType)
+	err = service.OpenDB(dbType, dbSource)
 	defer service.CloseDB()
 	if err != nil {
 		log.Fatalf("open DB error :%v", err)

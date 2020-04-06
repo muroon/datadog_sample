@@ -3,9 +3,10 @@ package usecases
 import (
 	"context"
 	"database/sql"
-	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 	"encoding/json"
 	"net/http"
+
+	"github.com/muroon/datadog_sample/httpserver/jsonmodel"
 
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
@@ -24,17 +25,35 @@ type message struct {
 	Text string
 }
 
-func initDB() {
+func initDB() error {
+	// dbType(mysql, postgress...)
+	dbType, err := conf.HttpDBType()
+	if err != nil {
+		return err
+	}
+
 	// Datadog
-	sqltrace.Register("mysql",
+	sqltrace.Register(dbType,
 		&mysql.MySQLDriver{},
 		sqltrace.WithServiceName("db-service"),
 	)
+
+	return nil
 }
 
 func openDB() error {
 	var err error
-	db, err = sqltrace.Open("mysql", "root:@/grpc_datadog")
+	tp, err := conf.HttpDBType()
+	if err != nil {
+		return err
+	}
+
+	dataSource, err := conf.HttpDBDataSource()
+	if err != nil {
+		return err
+	}
+
+	db, err = sqltrace.Open(tp, dataSource)
 	return err
 }
 

@@ -1,0 +1,19 @@
+httpserver:
+  db:
+    type: mysql
+    host: localhost
+    port: 3306
+    user: root
+    password:
+    database: datadog_sample
+grpcserver:
+  host: localhost
+  port: 50051
+  db:
+    type: mysql
+    host: localhost
+    port: 3306
+    user: root
+    password:
+    database: datadog_sample
+

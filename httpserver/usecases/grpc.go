@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -15,25 +16,33 @@ import (
 	grpctrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/google.golang.org/grpc"
 )
 
-const (
-	address = "localhost:50051"
-)
-
 var c pb.DataManagerClient
 var stream pb.DataManager_PostMessageClient
 var conn *grpc.ClientConn
 
 func openGrpc() error {
+
+	// config
+	host, port, err := conf.GrpcHostAndPort()
+	if err != nil {
+		return err
+	}
+	address := fmt.Sprintf("%s:%d", host, port)
+
+	// Datadog
 	ui := grpctrace.UnaryClientInterceptor(
+		grpctrace.WithServiceName("grpc-client-service"),
+	)
+	si := grpctrace.StreamClientInterceptor(
 		grpctrace.WithServiceName("grpc-client-service"),
 	)
 
 	// grpc connection
-	var err error
 	conn, err = grpc.Dial(address,
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		grpc.WithUnaryInterceptor(ui),
+		grpc.WithStreamInterceptor(si),
 	)
 	if err != nil {
 		return err
